@@ -6,6 +6,7 @@
 #include <poll.h>
 #include "encoder.h"
 #include "wsframe.h"
+#include "notify.h"
 
 #include <openssl/bio.h>
 #include <openssl/err.h>
@@ -122,6 +123,10 @@ void print_ws(char *rec_buffer, int len) {
     }
     memcpy(ptr_head, rec_buffer, len);
 
+    int messageSize = 100;
+    unsigned char * message = calloc(messageSize, sizeof(unsigned char));    
+    
+    bool isNotEmptyMessage = false;
     if (is_extended_frame) {
         uint16_t *ptr_size_e = &ptr_ws_recv_frame_extended->payload_length;
 
@@ -136,13 +141,29 @@ void print_ws(char *rec_buffer, int len) {
         for (int i = 0; i < *ptr_size_e; i++) {
             // -4 bytes offset because server's payload does not have mask
             printf("%c", ptr_payload[i - 4]);
+	
+	    // Copy 100 chars to notification msg
+	    if(i < messageSize - 1) {
+	       message[i] = ptr_payload[i - 4];
+	    }
         }
+
+	if (*ptr_size_e != 0) {
+	    isNotEmptyMessage = true;
+	}
+
     } else {
         for (int i = 0; i < *ptr_size; i++) {
             printf("%c", ptr_payload[i - 4]);
         }
     }
     printf("\n");
+
+    // send notification with the message to UI    
+    if (isNotEmptyMessage) {
+        send_notification("hack.chat", message);
+    }
+    free(message);
 }
 
 void print_recv_buffer(char *rec_buffer, int len) {
