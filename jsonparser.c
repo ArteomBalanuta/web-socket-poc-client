@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int
 count_double_quotes (unsigned char *string, int size)
@@ -63,10 +64,46 @@ validate_json_value (unsigned char *value, int size)
 	return false;
 }
 
+int* 
+getDoubleQuotesPositions (unsigned char *json, int size) 
+{
+int qCount = 0;
+for (int i=0; i<size; i++) {
+if(json[i] == '"' && json[i-1] != '\\'){
+qCount++;
+}
+}
+int *qPositions = calloc(qCount, sizeof(int));
+printf("quotes counted: %d \n", qCount);
+int qPosition = 0;
+for (int i=0; i<size; i++) {
+if(json[i]== '"' && json[i-1] != '\\'){
+ qPositions[qPosition] = i;
+ qPosition++;
+ }
+}
+
+return qPositions;
+}
+
+unsigned char* substring(unsigned char *string, int size, int start, int end){
+if (end < start) return NULL;
+	
+unsigned char *substring = calloc(end-start, sizeof(unsigned char));
+int substringIndex = 0;
+for(int i=0; i<size; i++){
+ if(i > start && i < end){
+   substring[substringIndex] = string[i];
+   substringIndex++;
+ }
+}
+return substring;
+}
+
 void
 parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 {
-  char jsonText[100] = "{\"name\":\"Alexandr\", \"age\":\"27\"}";
+  char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\":\"27\"}";
   char name[20] = "";
   char age[40] = "";
 
@@ -81,6 +118,30 @@ parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 
   printf("is valid key: %s \n", isValidKey ? "true" : "false");
   printf("is valid value: %s \n", isValidValue ? "true" : "false");
+
+  int *qPositions = getDoubleQuotesPositions(jsonText, 33);
+  for(int i=0; i<8; i++){
+   printf("q position: %d \n", qPositions[i]);
+  }
+  for(int i=0;i<33;i++){
+   printf("%d %c \n", i, jsonText[i]);
+  }
+  
+   int keyStartIndex = qPositions[0];
+   int keyEndIndex = qPositions[1];
+   int keySize = keyEndIndex - keyStartIndex;
+   unsigned char *keyName = substring(jsonText, 33, keyStartIndex, keyEndIndex);	
+   printf("key name: %s \n", keyName);
+
+   int valueStartIndex = qPositions[2];
+   int valueEndIndex = qPositions[3];
+   int valueSize = valueEndIndex - valueStartIndex;
+   unsigned char *value = substring(jsonText, 33, valueStartIndex, valueEndIndex);
+   printf("value: %s \n", value);
+   
+   free(qPositions);
+   free(keyName);
+   free(value);
 }
 
 int main(){
