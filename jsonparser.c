@@ -71,7 +71,7 @@ validate_json_value (unsigned char *value, int size)
 }
 
 int* 
-getDoubleQuotesPositions (unsigned char *json, int size) 
+get_doublequotes_positions (unsigned char *json, int size) 
 {
 int qCount = 0;
 for (int i=0; i<size; i++) {
@@ -110,8 +110,8 @@ void
 parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 {
   unsigned char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\":\"27\", \"email\":\"alex@email.net\"}\n";
-  int jsonSize = sizeof(jsonText);
-
+  
+  /*
   bool isValidKey = validate_json_key("\"name\"", 6);
   bool isValidValue = validate_json_value("\"age\"", 5);
   
@@ -120,8 +120,9 @@ parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
   
   printf("is valid key: %s \n", isValidKey ? "true" : "false");
   printf("is valid value: %s \n", isValidValue ? "true" : "false");
+  */
 
-  int *qPositions = getDoubleQuotesPositions(jsonText, jsonSize);
+  int *qPositions = get_doublequotes_positions(jsonText, sizeof(jsonText));
   int qPositionsSize = 12; 
   int pairsCount = qPositionsSize / 4;
   
@@ -129,8 +130,8 @@ parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
   struct Pair * pairs = calloc(pairsCount, sizeof(pair));
   
   for(int i=0, y=0; i < pairsCount; i++) {
-   pair.key = substring(jsonText, jsonSize, qPositions[y], qPositions[y+1]);
-   pair.value = substring(jsonText, jsonSize, qPositions[y+2], qPositions[y+3]);
+   pair.key = substring(jsonText, sizeof(jsonText), qPositions[y], qPositions[y+1]);
+   pair.value = substring(jsonText, sizeof(jsonText), qPositions[y+2], qPositions[y+3]);
    pairs[i] = pair;
    y += 4;
   }
