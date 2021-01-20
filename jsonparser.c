@@ -4,6 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+struct Pair {
+ unsigned char * key;
+ unsigned char * value;
+};
+
 int
 count_double_quotes (unsigned char *string, int size)
 {
@@ -103,9 +109,8 @@ return substring;
 void
 parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 {
-  char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\":\"27\"}";
-  char name[20] = "";
-  char age[40] = "";
+  unsigned char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\":\"27\", \"email\":\"alex@email.net\"}\n";
+  int jsonSize = sizeof(jsonText);
 
   bool isValidKey = validate_json_key("\"name\"", 6);
   bool isValidValue = validate_json_value("\"age\"", 5);
@@ -113,35 +118,32 @@ parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
   int index = index_of("abcdefgh", 8, 'a', false);
   int indexSecond = index_of("12345567890", 10, '5', true);
   
-  printf("index: %d \n", index);
-  printf("indexSecond: %d \n", indexSecond);
-
   printf("is valid key: %s \n", isValidKey ? "true" : "false");
   printf("is valid value: %s \n", isValidValue ? "true" : "false");
 
-  int *qPositions = getDoubleQuotesPositions(jsonText, 33);
-  for(int i=0; i<8; i++){
-   printf("q position: %d \n", qPositions[i]);
-  }
-  for(int i=0;i<33;i++){
-   printf("%d %c \n", i, jsonText[i]);
-  }
+  int *qPositions = getDoubleQuotesPositions(jsonText, jsonSize);
+  int qPositionsSize = 12; 
+  int pairsCount = qPositionsSize / 4;
   
-   int keyStartIndex = qPositions[0];
-   int keyEndIndex = qPositions[1];
-   int keySize = keyEndIndex - keyStartIndex;
-   unsigned char *keyName = substring(jsonText, 33, keyStartIndex, keyEndIndex);	
-   printf("key name: %s \n", keyName);
+  struct Pair pair;
+  struct Pair * pairs = calloc(pairsCount, sizeof(pair));
+  
+  for(int i=0, y=0; i < pairsCount; i++) {
+   pair.key = substring(jsonText, jsonSize, qPositions[y], qPositions[y+1]);
+   pair.value = substring(jsonText, jsonSize, qPositions[y+2], qPositions[y+3]);
+   pairs[i] = pair;
+   y += 4;
+  }
+    
+  for(int i=0; i < pairsCount; i++){
+   printf("key: %s \n",  pairs[i].key);
+   printf("value: %s \n",  pairs[i].value);
+   free(pairs[i].key);
+   free(pairs[i].value);
+  }
 
-   int valueStartIndex = qPositions[2];
-   int valueEndIndex = qPositions[3];
-   int valueSize = valueEndIndex - valueStartIndex;
-   unsigned char *value = substring(jsonText, 33, valueStartIndex, valueEndIndex);
-   printf("value: %s \n", value);
-   
+   free(pairs); 
    free(qPositions);
-   free(keyName);
-   free(value);
 }
 
 int main(){
