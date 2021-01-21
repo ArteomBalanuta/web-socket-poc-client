@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <ctype.h>
 
 struct Pair {
  unsigned char * key;
@@ -106,10 +106,82 @@ for(int i=0; i<size; i++){
 return substring;
 }
 
+void 
+parse_in_a_loop (){
+
+unsigned char json[22] = "{\"a\":1,\"b\":2,\"c\":\"cv\"}\n";
+
+if(json[0] != '{' || json[sizeof(json)-1] != '}') {
+printf("Wrong json \n");
+}
+
+bool isPairParsed = false;
+int quoteCount = 0;
+int keyStart = -1;
+int keyEnd = -1;
+int valueStart = -1;
+int valueEnd = -1;
+
+for(int i=0; i<sizeof(json); i++){
+if(json[i] == '"' && json[i-1] != '\\'){
+//printf(" == dquotes\n");
+if(keyStart == -1){
+//printf("setting keyStart: %d \n", i);
+keyStart = i;
+quoteCount++;
+
+} else
+
+if(keyStart != -1 && keyEnd == -1){
+//printf("setting keyEnd: %d \n",i);
+keyEnd = i;
+quoteCount++;
+} else
+
+//printf("ks %d, ke %d, vs %d\n", keyStart, keyEnd, valueStart);
+if(keyStart != -1 && keyEnd != -1 && valueStart == -1 && valueEnd == -1){
+valueStart = i;
+//printf("setting valueStart: %d \n", valueStart);
+quoteCount++;
+} else
+
+if(keyStart != -1 && keyEnd != -1 && valueStart != -1 && valueEnd == -1){
+valueEnd = i;
+//printf("setting valueEnd: %d \n", i);
+isPairParsed = true;
+}
+
+} // end if 
+
+if(keyStart != -1 && keyEnd != -1 
+   && json[i] == ':'
+   && isdigit(json[i+1]) && valueStart == -1){
+valueStart = i+1;
+//printf("setting valueStart for non string json value \n");
+}
+
+if( (json[i] == ',' || json[i] == '}') && valueStart != -1){
+//printf("setting valueEnd \n");
+valueEnd = i-1;
+isPairParsed = true;
+}
+
+if(isPairParsed){
+printf("key: %d %d, value: %d %d \n", keyStart, keyEnd, valueStart, valueEnd);
+keyStart = -1;
+keyEnd = -1;
+valueStart = -1;
+valueEnd = -1;
+quoteCount = 0;
+isPairParsed = false;
+ }
+}
+}
+
 void
 parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 {
-  unsigned char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\":\"27\", \"email\":\"alex@email.net\"}\n";
+  unsigned char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\": \"27\", \"email\":\"alex@email.net\"}\n";
   
   /*
   bool isValidKey = validate_json_key("\"name\"", 6);
@@ -149,5 +221,7 @@ parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 
 int main(){
 parse_hack_chat_json(NULL, NULL);
+printf("\n----------------\n\n\n\n");
+parse_in_a_loop();
 return 0;
 }
