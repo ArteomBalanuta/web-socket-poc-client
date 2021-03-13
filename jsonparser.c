@@ -70,9 +70,7 @@ validate_json_value (unsigned char *value, int size)
 	return false;
 }
 
-int* 
-get_doublequotes_positions (unsigned char *json, int size) 
-{
+int* get_doublequotes_positions (unsigned char *json, int size, unsigned int * quoteCount) {
 int qCount = 0;
 for (int i=0; i<size; i++) {
 if(json[i] == '"' && json[i-1] != '\\'){
@@ -80,7 +78,10 @@ qCount++;
 }
 }
 int *qPositions = calloc(qCount, sizeof(int));
+
+*quoteCount = qCount;
 printf("quotes counted: %d \n", qCount);
+
 int qPosition = 0;
 for (int i=0; i<size; i++) {
 if(json[i]== '"' && json[i-1] != '\\'){
@@ -182,21 +183,14 @@ void
 parse_hack_chat_json (unsigned char *json, unsigned char *nameMessageString)
 {
   unsigned char jsonText[100] = "{\"name\":\"Alex\\\"andr\", \"age\": \"27\", \"email\":\"alex@email.net\"}\n";
+ 
+  printf("json: %s", jsonText); 
+ 
+  unsigned int qPositionSize = 0; 
+  int * qPositions = get_doublequotes_positions(jsonText, sizeof(jsonText), &qPositionSize);
   
-  /*
-  bool isValidKey = validate_json_key("\"name\"", 6);
-  bool isValidValue = validate_json_value("\"age\"", 5);
-  
-  int index = index_of("abcdefgh", 8, 'a', false);
-  int indexSecond = index_of("12345567890", 10, '5', true);
-  
-  printf("is valid key: %s \n", isValidKey ? "true" : "false");
-  printf("is valid value: %s \n", isValidValue ? "true" : "false");
-  */
-
-  int *qPositions = get_doublequotes_positions(jsonText, sizeof(jsonText));
-  int qPositionsSize = 12; 
-  int pairsCount = qPositionsSize / 4;
+  printf("quote count: %d \n", qPositionSize);
+  int pairsCount = qPositionSize / 4;
   
   struct Pair pair;
   struct Pair * pairs = calloc(pairsCount, sizeof(pair));
